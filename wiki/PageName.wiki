@@ -1,13 +1,31 @@
-#summary One-sentence summary of this page.
+#summary 1.0 - General Usage.
 
-= Introduction =
+= 1.0 GENERAL USAGE =
 
-Add your content here.
+This is an example on how to use the Flash player detection and embed/object features of swfIN.
 
 
-= Details =
+//create the swfIN  |  [required]  |  path to SWF (string), movie's ID (string), width (int: pixel value OR string with trailing %: percent value)
+var f = new swfIN("movie.swf", "movieID", "100%", "100%");
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+//force a minimum size when resizing browser or screen resolution too small |  [optional]  |  width (int: pixel value), height (int: pixel value)
+f.minSize(800, 600);
+
+//tell the script to use expressInstall (works with swfObject's expressInstall.as)  |  [optional]  | no arguments
+f.useExpressInstall();
+
+//player requirements & action if requirements are not met  |  [optional]  |  required flash version (int), type of action (string), extras[...]
+//*** see documentation section 2.0 in documentation for details on using actions
+f.detect(8, true, "r", "update.html", true);
+
+//flashvars  |  [optional]  |  flashVar name (string), flashVar value (string)
+f.addVar("hello", "test");  //direct value
+//f.addVar( "hello", fd.tools.getQsParam("hello") );  //read through querystring as  index.html?hello=test
+//f.addVars( fd.tools.getQs() );  //pass the whole querystring as params - notice the method's name: .addVars()
+
+//embed/object params  |  [optional]  |  param name (string), param value (string)
+f.addParam("bgcolor", "#400000");
+f.addParam("menu", "false");
+
+//write the tag  |  [required]
+f.write();
