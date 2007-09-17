@@ -1,0 +1,41 @@
+<!-- saved from url=(0013)about:internet -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>swfIN</title>
+<script type="text/javascript" src="../swfIN_src.js"></script>
+
+<style type="text/css">  body, html {margin:0; padding:0; height:100%} </style>
+</head>
+<body>
+
+<div id="div_seo">This is the optional content we want Google, outdated browsers and browsers without javascript to see</div>
+
+<form>
+
+<script type="text/javascript">
+	
+	var s = new swfIN("callbackTest.swf", "myMovie", 500, 500);
+	
+	s.detect( [9,0,0] , "update.html", true);
+	
+	s.addParam("bgcolor", "#DDDDDD");
+	s.addParam("menu", "false");
+	
+	s.hideSEO("div_seo");
+	
+	s.write();
+	
+	
+	function testing(){
+		s.callback("inject", "hello", 48);
+	}
+	
+</script><noscript>Javascript must be enabled to view this site</noscript>
+
+</form>
+
+
+</body>
+</html>
