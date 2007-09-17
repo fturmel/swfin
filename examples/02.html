@@ -1,0 +1,51 @@
+<!-- saved from url=(0013)about:internet -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>swfIN</title>
+<script type="text/javascript" src="../swfIN_src.js"></script>
+<style type="text/css">  body, html {margin:0; padding:0; height:100%} </style>
+</head>
+<body>
+
+<div id="div_seo">This is the optional content we want Google, outdated browsers and browsers without javascript to see</div>
+
+<script type="text/javascript">
+
+	//create the swfIN  |  [required]  |  path to SWF (string), movie's ID (string), width (int: pixel value OR string with trailing %: percent value)
+	var s = new swfIN("movie.swf", "myMovie", "100%", "100%");
+	
+	//force a minimum size when resizing browser or screen resolution too small |  [optional]  |  width (int: pixel value), height (int: pixel value)
+	//note: this only work well if the page has no margins and you use 100% in the constructor
+	s.scrollbarAt(800, 600);
+	
+	//express install  |  optional  |  express install swf path(string), width(number), height(number)
+	//optional width & height; they can be omitted, null, ints or strings
+	//note: if omitted, they will use the size defined in the constructor
+	//note: if the width/height are 100%, they will still obey the scrollbarAt() settings
+	//s.useExpressInstall("../xi.swf", 300, 300);
+	
+	//player requirements & redirect URL  |  [optional]  |  required flash version (array), url(string), pass querystring param(boolean)
+	s.detect( [10,0,0] , "update.html", true);
+	
+	//flashvars  |  [optional]  |  flashVar name (string), flashVar value (Object)
+	s.addVar("test", "http://www.test.com");
+	s.addVar("hello", swfIN.utils.getQueryParam("hello") );  //read through querystring as  index.html?hello=test
+	//s.addVars( swfIN.utils.getAllQueryParams() );  //pass the whole querystring as params - notice the method's name: .addVars()
+	
+	//swf params  |  [optional]  |  param name (string), param value (string)
+	s.addParam("bgcolor", "#400000");
+	s.addParam("menu", "false");
+	
+	//hide the SEO div  |  [optional]  |  seodiv name (string)
+	s.hideSEO("div_seo");
+	
+	//write the tag  |  [required]
+	s.write();
+	
+	
+</script><noscript>Javascript must be enabled to view this site</noscript>
+
+</body>
+</html>

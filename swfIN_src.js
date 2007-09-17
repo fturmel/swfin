@@ -1,411 +1,831 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 1.0.3  -  2007-03-29
+  swfIN 2.1.0  -  2007-09-15
   javascript toolkit for flash developers
-  © 2004-2007 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
+  © 2005-2007 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
 
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-// Main project
-var fd = {};
-fd.showFlash = function(movie, id, params, flashVars, w, h, requiredVersion, action, expressInstall){
-	
-	//define vars & consts
-	if (fd.movies == null) fd.movies = [];
-	if (requiredVersion == null) requiredVersion = 0;
-	var installed_version = fd.tools.getFlashVersion();
-	var codebase = "http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version="+requiredVersion+",0,0,0";
-	if (fd.player_download == null) fd.player_download = "http://www.macromedia.com/go/getflashplayer";
-	
-	//6.0.65  is the minimum version that supports express install...
-	fd.tryExpressInstall = (installed_version < requiredVersion && expressInstall && installed_version >= 6);
 
-	//parse action string
-	(action != null) ? action = action.split(" : ") : action = "";
+/**
+ * swfIN constructor
+ * Note: width and height can be either Numbers or Strings (for percentage: "100%")
+ * @param {String} swfPath
+ * @param {String} swfID
+ * @param {String} width
+ * @param {String} height
+ */
+if( typeof swfIN == "undefined" ){
+var swfIN = function(swfPath, swfID, width, height){
 	
-	// Parse action
-	if (installed_version >= requiredVersion || fd.tools.getQsParam("bypassFlashCheck") == "true" || fd.tryExpressInstall){
-		//Flash player OK or Bypass == true, printout the swf tag
-		fd.actions.outputTag(movie, id, params, flashVars, w, h, codebase);
-	}else if(action[0] == "r"){
-		//redirect to page
-		fd.actions.redirect(action[1], action[2], requiredVersion, installed_version);
-	}else if(action[0] == "i"){
-		//show image
-		fd.actions.image(action[1], action[2]);
-	}else if (action[0] == "d"){
-		//show hidden div content
-		fd.actions.showDiv(action[1]);
-	}else if (action[0] == "h"){
-		//output raw HTML
-		fd.actions.html(action[1]);
-	}
+	//init
+	this.params = [];
+	this.flashVars = [];
 	
-	//make sure no other swfs have the same ID - if one does, warn the dev with an alert() so that he can fix this
-	for (var i=0; i<fd.movies.length; i++){
-		if(fd.movies[i] == id) alert("swfIN alert:\nYou cannot name two swfs by the same id. Please revise your swfs IDs in your swfIN() instanciation.");
-	}
+	this.swfPath = swfPath;
+	this.swfID = swfID;
+	this.containerDivID = "div_" + swfID;
+	this.width = String(width);
+	this.height = String(height);
+	this.scrollbarWidth = null;
+	this.scrollbarHeight = null;
+	this.requiredVersion = [0,0,0];
+	this.redirectURL = null;
+	this.redirectUseParams = false;
+	this.xiPath = null;
+	this.xiWidth = null;
+	this.xiHeight = null;
+	this.is_written = false;
 	
-	//push this new movie in here
-	fd.movies.push(id);
-};
+	
+	//init windows resize & array proto, but only once!
+	swfIN._static.init();
+	
+}
 
-
-// Actions if player requirements not met
-fd.actions = {
-	////////////////////////////////////////////////////////////
-	// Output embed/object tag for swf
-	outputTag: function(movie, id, params, flashVars, w, h, codebase){
+swfIN.prototype = {
+	
+	/**
+	 * Add an embed param
+	 * @param {String} name
+	 * @param {Object} val
+	 * @return {void}
+	 */
+	addParam: function(name, val){
+		if(name != "") this.params[name] = val;
+	},
+	
+	
+	/**
+	 * Add a flashVar
+	 * @param {Object} name
+	 * @param {Object} val
+	 * @return {void}
+	 */
+	addVar: function(name, val){
+		if(name != "") this.flashVars[name] = val;
+	},
+	
+	
+	/**
+	 * Add multiple flashVars. Note: works well with swfIN.utils.getAllQueryParams()
+	 * @param {Array} vars
+	 * @return {void}
+	 */
+	addVars: function(vars){
+		for(var i in vars) this.addVar(i, vars[i]);
+	},
+	
+	
+	/**
+	 * Set the size at which the browser scrollbar will take over. Old minSize() method.
+	 * Can be used after write()
+	 * @param {Number} width
+	 * @param {Number} height
+	 * @return {void}
+	 */
+	scrollbarAt: function(width, height){
+		this.scrollbarWidth = width;
+		this.scrollbarHeight = height;
 		
-		//express install stuff
-		if(fd.tryExpressInstall){
+		if( this.is_written ) this.refresh();
+	},
+	
+	
+	/**
+	 * Resize the embeded SWF
+	 * Cam be used after write()
+	 * @param {Number} width
+	 * @param {Number} height
+	 * @return {void}
+	 */
+	resize: function(width, height){
+		this.width = width;
+		this.height = height;
+		
+		if( this.is_written ) this.refresh();
+	},
+	
+	
+	/**
+	 * Set the required Flash version, and optional redirect infos
+	 * @param {Array} requiredVersion
+	 * @param {String} redirectURL
+	 * @param {Boolean} redirectUseParams
+	 * @return {void}
+	 */
+	detect: function(requiredVersion, redirectURL, redirectUseParams){
+		this.requiredVersion = requiredVersion;
+		this.redirectURL = redirectURL;
+		this.redirectUseParams = redirectUseParams;
+	},
+	
+	
+	/**
+	 * Indicates the use of express install by specifying the path the to xi.swf to use
+	 * Optional width/height
+	 * @param {String} xiPath
+	 * @param {Number} width
+	 * @param {Number} height
+	 * @return {void}
+	 */
+	useExpressInstall: function(xiPath, width, height){
+		this.xiPath = xiPath;
+		this.xiWidth = width;
+		this.xiHeight = height;
+	},
+	
+	
+	/**
+	 * Shortcut to init SWFAddress
+	 * @return {void}
+	 */
+	useSWFAddress: function(){
+		if( typeof SWFAddress != "undefined" ){
+			SWFAddress.setId( this.getSWFID() );
+		}else{
+			this._error( "Can't find the SWFAddress js lib. Remove the .useSWFAddress() call if you're not using it.");
+		}
+	},
+	
+	
+	/**
+	 * Helper for ExternalInterface callbacks. Accepts up to 15 extra args
+	 * @param {String} funk
+	 * @return {void}
+	 */
+	callback: function(funk){
+		
+		//can't use apply since it's not really a function from the DOM
+		
+		var len = arguments.length - 1;
+		var o = window.document[ this.getSWFID() ];
+		var a = arguments;
+		var f = funk;
+		
+		if(len > 15) this._error(".callback supports a maximum of 15 extra args. You currently have " + len);
+		
+		switch(len){
+			case 0:
+				o[f](); break;
+			case 1:
+				o[f](a[1]); break;
+			case 2:
+				o[f](a[1], a[2]); break;
+			case 3:
+				o[f](a[1], a[2], a[3]); break;
+			case 4:
+				o[f](a[1], a[2], a[3], a[4]); break;
+			case 5:
+				o[f](a[1], a[2], a[3], a[4], a[5]); break;
+			case 6:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6]); break;
+			case 7:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7]); break;
+			case 8:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]); break;
+			case 9:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]); break;
+			case 10:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]); break;
+			case 11:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]); break;
+			case 12:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]); break;
+			case 13:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13]); break;
+			case 14:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14]); break;
+			case 15:
+				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]); break;
+		}
+		
+		
+	},
+	
+	
+	/**
+	 * Write the html tags!
+	 * @return {void}
+	 */
+	write: function(){
+		
+		//decide action to take
+		if( !swfIN.detect.isPlayerVersionValid(this.requiredVersion) && swfIN.detect.isPlayerVersionValid(swfIN._memory.expressInstallVersion) && this.xiPath != null && swfIN.utils.getQueryParam("detect") != "false" ){
+			//embed the express install swf
 			
-			flashVars["MMplayerType"] = (fd.tools.nsPlugin()) ? "PlugIn": "ActiveX";
+			//noscale
+			//TODO:REMOVE THIS eventually when I build my own xi.swf, it should have noScale built-in with code
+			this.addParam("scale", "noScale");
+			
+			//express install flashVars
 			document.title = document.title.slice(0, 47) + " - Flash Player Installation";
-			flashVars["MMdoctitle"] = document.title;
-			flashVars["MMredirectURL"] = escape(window.location);
+			this.addVar("MMdoctitle", document.title);
+			this.addVar("MMplayerType", ( swfIN.detect.nsPlugin() ) ? "PlugIn": "ActiveX");
+			this.addVar("MMredirectURL", window.location);
+			
+			//change swfPath and width/height
+			//TODO: make the min size check for express install work with % - tie it with _calculateWidth() etc..
+			this.width = this.xiWidth || this.width;
+			if(this.width < swfIN._memory.expressInstallMinSize.w) this.width = swfIN._memory.expressInstallMinSize.w;
+			this.height = this.xiHeight || this.height;
+			if(this.height < swfIN._memory.expressInstallMinSize.h) this.height = swfIN._memory.expressInstallMinSize.h;
+			this.swfPath = this.xiPath;
+			
+			//embed express install swf
+			document.write( this.getHTML() );
+			
+		}else if ( swfIN.detect.isPlayerVersionValid(this.requiredVersion) || swfIN.utils.getQueryParam("detect") == "false" ){
+			//Flash player OK or detect == false, embed the SWF normally
+			document.write( this.getHTML() );
+			
+		}else if( this.redirectURL != null ){
+			//redirect to noFlash url
+			var url = ( this.redirectUseParams ) ? this.redirectURL + "?required=" + this.requiredVersion.join(".") + "&installed=" + swfIN.detect.getPlayerVersionString() : this.redirectURL;
+			location.href = url;
 			
 		}
 		
-		//append flash vars to swf path
+		//check for all possible conflicts
+		this._checkForConflicts();
+		
+		//push a reference to the swfIN instance
+		swfIN._memory.swf_stack.push( this );
+		
+		//flag as written
+		this.is_written = true;
+		
+		//refresh size
+		//TODO: will this fix the IE6 table bug, or only the old innerHTML trick will work? Do we still need this?
+		this.refresh();
+		
+		//form fix
+		this._formFix();
+		
+	},
+	
+	
+	/**
+	 * Clear and hide the SEO div
+	 * @param {String} seoDiv
+	 * @return {void}
+	 */
+	hideSEO: function(seoDiv){
+		swfIN.utils.$delete(seoDiv);
+		
+		/*
+		//old stuff
+		var div = swfIN.utils.$(seoDiv);
+		div.innerHTML = "";
+		div.style.display = "none";
+		*/
+		
+	},
+	
+	
+	/**
+	 * Returns the container div's ID as a String
+	 * @return {String}
+	 */
+	getDivID: function(){
+		return this.containerDivID;
+	},
+
+
+	/**
+	 * Returns the container div's reference (Object / HTMLDivElement)
+	 * @return {HTMLDivElement}
+	 */	
+	getDivRef: function(){
+		return swfIN.utils.$( this.getDivID() );
+	},
+	
+	
+	/**
+	 * Returns the embedded SWF's ID as a String
+	 * return {String}
+	 */
+	getSWFID: function(){
+		return this.swfID;
+	},
+	
+	
+	/**
+	 * Returns the embedded SWF's reference (Object / HTMLDivElement)
+	 * @return {HTMLDivElement}
+	 */
+	getSWFRef: function(){
+		return swfIN.utils.$( this.getSWFID() );
+	},
+	
+	
+	/**
+	 * Refresh display and calculates if scrollbars are needed
+	 * @return {void}
+	 */
+	refresh: function(){
+		var div = this.getDivRef();
+		div.style.width = this._calculateWidth();
+		div.style.height = this._calculateHeight();
+	},
+	
+	
+	/**
+	 * Returns the HTML code to be written for the embedding
+	 * @return {String}
+	 */
+	getHTML: function(){
+		
+		//flashvars
 		var fv = "";
-		for (var k in flashVars){
-			fv += ( fv == "" ) ? k + "=" + escape(flashVars[k]) : "&" + k + "=" + escape(flashVars[k]);
+		for(var i in this.flashVars){
+			var mod = (fv == "") ? "" : "&";
+			fv += mod + i + "=" + escape(this.flashVars[i]);
 		}
+		
 		
 		//param/name array DEFAULTS
 		var p = [];
 		p["quality"] = "high";
 		p["menu"] = "false";
 		p["swLiveConnect"] = "true";
-		p["pluginspage"] = fd.player_download;
-		p["allowScriptAccess"] = "always";  //"always"  ? this might be needed for express install
+		p["pluginspage"] = swfIN._memory.player_download;
+		p["allowScriptAccess"] = "always";
 		p["FlashVars"] = fv;
 		
+		
 		//then use user's version to override the default
-		for (var i in params) p[i] = params[i];
-		
-		
-		//NS4 will need the exact w and h in the obj
-		var obj_w, obj_h;
-		if ( !fd.tools.ns4() ){
-			obj_w = "100%";
-			obj_h = "100%";
-		}else{
-			obj_w = fd.size.calculate(w, "w");
-			obj_h = fd.size.calculate(h, "h");
-		}
-		
-		
-		//only use codebase for IE7 since we can't detect the version... All the other browsers should use express install or redirection
-		var cb = (fd.tools.ie7())? "codebase='"+codebase+"'" : "" ;
-		
+		for(var i in this.params) p[i] = this.params[i];
 		
 		//compile the object & embed tag
-		//var tag = "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' codebase='"+codebase+"' id='"+id+"' width='"+obj_w+"' height='"+obj_h+"' align='top' hspace='0' vspace='0'><param name='movie' value='"+movie+"'>";
-		var tag = "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' "+cb+" id='"+id+"' width='"+obj_w+"' height='"+obj_h+"' align='top' hspace='0' vspace='0'><param name='movie' value='"+movie+"'>";
-		for (var i in p) tag += "<param name='"+i+"' value='"+p[i]+"'>";
-		tag += "<embed src='"+movie+"' width='"+obj_w+"' height='"+obj_h+"' align='top' hspace='0' vspace='0' type='application/x-shockwave-flash' name='"+id+"' ";
-		for (var i in p) tag += i+"='"+p[i]+"' ";
+		var tag = "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' "+" id='"+this.swfID+"' width='100%' height='100%' align='top' hspace='0' vspace='0'><param name='movie' value='"+this.swfPath+"'>";
+		
+		//place params in tag
+		for(var i in p) tag += "<param name='"+i+"' value='"+p[i]+"'>";
+		tag += "<embed src='"+this.swfPath+"' width='100%' height='100%' align='top' hspace='0' vspace='0' type='application/x-shockwave-flash' name='"+this.swfID+"' ";
+		for(var i in p) tag += i+"='"+p[i]+"' ";
 		tag += "></embed></object>";
 		
 		//output
-		if ( !fd.tools.ns4() ){
-			//not NS4, append the div tag
-			var a = "<div id='div_"+id+"' style='width:"+ fd.size.calculate(w, "w") +"; height:"+ fd.size.calculate(h, "h") +"'>" + tag + "</div>";
-			document.write(a);
-			//alert(a);
-			
-			//little hack to refresh content, fixes a bug in IE when used inside a table
-			if( fd.tools.ie() ) $id("div_" + id).innerHTML = $id("div_" + id).innerHTML;
-			
-			//remember the initial w/h settings
-			$id("div_" + id).fd_w = w;
-			$id("div_" + id).fd_h = h;
-			
-		}else{
-			//ns4, output directly the embed/object, no div since it can't change the width/height
-			document.write(tag);
+		tag = "<div id='"+this.containerDivID+"' style='width:"+ this._calculateWidth() +"; height:"+ this._calculateHeight() +"'>" + tag + "</div>";
+		
+		return tag;
+		
+	},
+	
+	
+	//#######################################################
+	//private - misc
+	
+	
+	/**
+	 * Fixes callbacks when SWF is inside a form in IE
+	 * @return {void}
+	 */
+	_formFix: function(){
+		
+		if( swfIN.detect.ie() ){
+			window[ this.getSWFID() ] = document[ this.getSWFID() ];
+		}
+		
+	},
+
+	
+	/**
+	 * Returns good value to use for width
+	 * @return {String}
+	 */
+	_calculateWidth: function(){
+		return this._sizeHelper("Width");
+	}, 
+
+
+	/**
+	 * Returns good value to use for height
+	 * @return {String}
+	 */	
+	_calculateHeight: function(){
+		return this._sizeHelper("Height");
+	},
+	
+	
+	/**
+	 * Internal helper to calculate width and height
+	 * @param {String} type
+	 * @return {String}
+	 */
+	_sizeHelper: function( type ){
+		
+		var scrollbar = String( this["scrollbar" + type] );
+		var res = String( this[type.toLowerCase()] );
+		
+		if ( scrollbar != null && res.indexOf("%") > -1 ){
+			var pixelVal = swfIN.detect.getBrowserSize()[type.substr(0,1).toLowerCase()] * ( res.split("%")[0] / 100);
+			res = ( scrollbar > pixelVal ) ? scrollbar : res;
+		}
+		
+		return ( res.indexOf("%") > -1 ) ? res : res + "px" ;
+		
+	},
+	
+	
+	/**
+	 * Checks if everything is in place to properly embed. Most of these warnings are meant to be alerts for devs
+	 * @return {void}
+	 */
+	_checkForConflicts: function(){
+		
+		
+		//swfID and container ID cannot be empty, no more auto-generation
+		if(this.swfID == null) this._error("The swf's id cannot be empty");
+		if(this.containerDivID == null) this._error("The container div's id cannot be empty");
+		
+		
+		//make sure there is no spaces or illegal chars in the ids
+		if(this.swfID.indexOf(" ") > -1) this._error("The swf's id cannot contain spaces");
+		if(this.containerDivID.indexOf(" ") > -1) this._error("The container div's id cannot contain spaces");
+		
+		
+		//swfID and containerID cannot be the same
+		if( this.getDivID() == this.getSWFID() ) this._error("You cannot name swfs or divs by the same id. Please revise the ids currently in use.");
+		
+		//... and troughout all swfIN instances
+		var movies = swfIN._memory.swf_stack;
+		for (var i=0; i<movies.length; i++){
+			if( movies[i].getDivID() == this.getDivID() ||
+				movies[i].getDivID() == this.getSWFID() ||
+				movies[i].getSWFID() == this.getDivID() ||
+				movies[i].getSWFID() == this.getSWFID() ){
+					this._error("You cannot name swfs or divs by the same id. Please revise the ids currently in use.");
+			}
 		}
 		
 	},
 	
-	////////////////////////////////////////////////////////////
-	// Redirect to page
-	redirect: function(url, getVars, required, installed){
-		if ( getVars == "true" ){
-			location.href = url + "?r=" + required + "&i=" + installed;	
-		}else{
-			location.href = url;		
-		} 
-	},
 	
-	////////////////////////////////////////////////////////////
-	// Show image
-	image: function(img_path, url){
-		if (url == "none"){
-			//print out image with no <a> tag
-			document.write("<img src='"+img_path+"' border=0 />");
-		}else{
-			//if no URL specified, use the default macromedia download
-			//else, use the one specified
-			if (url == null) url = fd.player_download;
-			document.write("<a href='"+url+"' target='_blank'><img src='"+img_path+"' border=0 /></a>");
-		}
-	},
-	
-	////////////////////////////////////////////////////////////
-	// Show hidden div  -  Not compatible with ns4 and ie5_mac
-	showDiv: function(id){
-		if ( !fd.tools.ns4() && !fd.tools.ie5_mac() ){
-			$id(id).style.display="block";
-		}
-	},
-	
-	////////////////////////////////////////////////////////////
-	// Output raw HTML
-	html: function(html){
-		document.write(html);
+	/**
+	 * Simple debug alert() call to warn devs about common integration errors
+	 * @param {String} msg
+	 * @return {void}
+	 */
+	_error: function(msg){
+		alert("swfIN error!\n"+msg);
 	}
 	
-};
+  
+}
 
 
-// Size and refresh related methods
-fd.size = {
-	////////////////////////////////////////////////////////////
-	// Returns good value to use with height and width
-	calculate: function(val, type){
-		
-		//only parse if there's a " : " in val
-		if ( val.indexOf(" : ") != -1 ){
-			//parse and check minimum display size
-			val = val.split(" : ");
-			
-			//if the first value is a percent value, use it to modify comparison
-			var t_val = val[0].split("%");
-			
-			//define multiplier
-			var multiplier = (t_val[0] != "" && t_val[1] != null) ? (t_val[0] / 100) : 1;
-			
-			//compare window
-			var pixelVal = fd.tools.browserSize()[type] * multiplier;
-			var res = (val[1] > pixelVal || val[1] == "") ? val[1] : val[0];
-			
-			//force to have the correct type
-			if(res.indexOf("%") > -1){
-				return res;
-			}else{
-				return res + "px";
-			}
-			
-			
-		}else{
-			
-			if(val.indexOf("%") > -1){
-				return val;
-			}else{
-				return val + "px";
-			}
-			
-		}
-		
-	},
+
+//###############################################################################
+//private static methods package
+
+swfIN._static = {
 	
-	////////////////////////////////////////////////////////////
-	// Called by the window.resize
-	refresh: function(){
-		if ( !fd.tools.ns4() ){
-			//batch-check all movies in the page
-			for (var id in fd.movies){
-				
-				//change the DIV tag's property if this object exists
-				if ( $id("div_" + fd.movies[id]) ){
-					
-					//get size to use
-					var w = fd.size.calculate($id("div_" + fd.movies[id]).fd_w , "w");
-					var h = fd.size.calculate($id("div_" + fd.movies[id]).fd_h , "h");
-					
-					$id("div_" + fd.movies[id]).style.width = w;
-					$id("div_" + fd.movies[id]).style.height = h;
-					
+	/**
+	 * Init, only called once by the first swfIN instance to set the Array.push() mixin and the window.resize event handler
+	 * @return {void}
+	 */
+	init: function(){
+		
+		if( !swfIN._memory.is_init ){
+			
+			//Array.push() prototype for IE5 on Mac
+			if (Array.prototype.push == null){
+				Array.prototype.push=function(val){
+					this[this.length]=val;
+					return this.length;
 				}
 			}
-		}else{
-			//ns4, force a redraw because of that old stupid window.resize refresh bug
-			location.reload();
+			
+			//add a listener to the window's resize event
+			swfIN.utils.addEventListener(window, "resize", swfIN._static.refreshAll);
+			
+			//flag as init
+			swfIN._memory.is_init = true;
 		}
-	},
+		
+	}, 
 	
-	////////////////////////////////////////////////////////////
-	// force a manual resize of the div
-	resizeDiv: function(id, w, h){
-		//split values
-		var old_w = $id("div_" + id).fd_w.split(" : ");
-		var old_h = $id("div_" + id).fd_h.split(" : ");
-		
-		//write new values
-		$id("div_" + id).fd_w = (old_w[1] == null) ? w : w + " : " + old_w[1];
-		$id("div_" + id).fd_h = (old_h[1] == null) ? h : h + " : " + old_h[1];
-		
-		//alert($id("div_" + id).fd_w + " " + $id("div_" + id).fd_h);
-		
-		//force refresh
-		fd.size.refresh();
-	},
 	
-	////////////////////////////////////////////////////////////
-	// to change the minSize on the fly after writing the div
-	changeMinSize: function(id, w, h){
-		//split values
-		var old_w = $id("div_" + id).fd_w.split(" : ");
-		var old_h = $id("div_" + id).fd_h.split(" : ");
-		
-		//write new values
-		$id("div_" + id).fd_w = old_w[0] + " : " + w;
-		$id("div_" + id).fd_h = old_h[0] + " : " + h;
-		
-		//alert($id("div_" + id).fd_w + " " + $id("div_" + id).fd_h);
-		
-		//force refresh
-		fd.size.refresh();
-	},
-	
-	percent2pixel: function(){
-		return 0;
+	/**
+	 * Refreshed the sizes of all swfIN instances
+	 * Called by the window.resize
+	 * @return {void}
+	 */
+	refreshAll: function(){
+		//refresh all instances
+		var movies = swfIN._memory.swf_stack;
+		for (var i=0; i<movies.length; i++) movies[i].refresh();
 	}
 	
-};
-
-
-// General tools
-fd.tools = {
-	////////////////////////////////////////////////////////////
-	// Get querystring param
-	getQsParam: function(key){
-		var tmp = fd.tools.getQs()[key];
-		return (tmp != null && tmp != undefined && tmp != "") ? tmp : null ;
-	},
 	
-	////////////////////////////////////////////////////////////
-	// Get full querystring, will return an array
-	getQs: function(){
-		var params = window.location.search.substring(1).split("&");
-		var qs=[];
+}
+
+
+
+//###############################################################################
+//private static vars package
+
+swfIN._memory = {
+	
+	swf_stack: [],
+	is_init: false,
+	player_download: "http://www.adobe.com/go/getflash/", //http://www.macromedia.com/go/getflashplayer
+	user_agent: navigator.userAgent.toLowerCase(),
+	expressInstallMinSize:{w:214, h:137},
+	expressInstallVersion: [6,0,65],
+	fullscreenModeVersion: [9,0,28],
+	vistaVersion: [9,0,28]
+
+}
+
+
+//###############################################################################
+//DETECT LIB
+
+swfIN.detect = {
+	
+	/**
+	 * Returns an array of ints [major, minor, rev]
+	 * taken from swfObject 1.5 with some minor adjustments
+	 * @return {Array}
+	 */
+	getPlayerVersion: function(){
 		
-		for (var i=0; i<params.length; i++) { //var i in params not supported by IE on mac! ouch..
-			var pos = params[i].indexOf("=");
-			if (pos > 0) qs[params[i].substring(0,pos)] = params[i].substring(pos+1);
+		var v = [0,0,0];
+		var axo;
+		if(navigator.plugins && navigator.mimeTypes.length){
+			var x = navigator.plugins["Shockwave Flash"];
+			if(x && x.description) {
+				v = x.description.replace(/([a-zA-Z]|\s)+/, "").replace(/(\s+r|\s+b[0-9]+)/, ".").split(".");
+			}
+		}else if (navigator.userAgent && navigator.userAgent.indexOf("Windows CE") >= 0){ // if Windows CE
+			axo = 1;
+			var counter = 3;
+			while(axo) {
+				try {
+					counter++;
+					axo = new ActiveXObject("ShockwaveFlash.ShockwaveFlash."+ counter);
+					v = [counter,0,0];
+				} catch (e) {
+					axo = null;
+				}
+			}
+		} else { // Win IE (non mobile)
+			// do minor version lookup in IE, but avoid fp6 crashing issues
+			// see http://blog.deconcept.com/2006/01/11/getvariable-setvariable-crash-internet-explorer-flash-6/
+			
+			try{
+				axo = new ActiveXObject("ShockwaveFlash.ShockwaveFlash.7");
+			}catch(e){
+				try {
+					axo = new ActiveXObject("ShockwaveFlash.ShockwaveFlash.6");
+					v = [6,0,21];
+					axo.AllowScriptAccess = "always"; // error if player version < 6.0.47 (thanks to Michael Williams @ Adobe for this code)
+				} catch(e) {
+					if (v[0] == 6) {
+						return v;
+					}
+				}
+				try {
+					axo = new ActiveXObject("ShockwaveFlash.ShockwaveFlash");
+				} catch(e) {}
+			}
+			if (axo != null) {
+				v = axo.GetVariable("$version").split(" ")[1].split(",");
+			}
 		}
+		return v;
 		
-		return qs;
 	},
 	
-	////////////////////////////////////////////////////////////
-	// Simple detections for problematic browsers  http://www.webreference.com/programming/javascript/detection/3.html
+	
+	/**
+	 * Takes an array of ints [major, minor, rev]
+	 * taken from swfObject 1.5 with some minor adjustments
+	 * @param {Array} required
+	 * @return {Boolean}
+	 */
+	isPlayerVersionValid: function(required){
+		var current = swfIN.detect.getPlayerVersion();
+		if(current[0] < required[0]) return false;
+		if(current[0] > required[0]) return true;
+		if(current[1] < required[1]) return false;
+		if(current[1] > required[1]) return true;
+		if(current[2] < required[2]) return false;
+		return true;
+	},
+	
+	
+	/**
+	 * Returns a string in the format "9.0.47", for display purposes only
+	 * @return {String}
+	 */
+	getPlayerVersionString: function(){
+		return swfIN.detect.getPlayerVersion().join(".");
+	},
+	
+	
+	/**
+	 * Is Netscape 4?
+	 * @return {Boolean}
+	 */
 	ns4: function(){
-		return (document.layers) ? true : false;		
+		return (document.layers != null);
 	},
 	
+	
+	/**
+	 * Is IE5 on Mac?
+	 * @return {Boolean}
+	 */
 	ie5_mac: function(){
-		var user_agent = navigator.userAgent.toLowerCase();
-		return (user_agent.indexOf("msie 5") != -1 && user_agent.indexOf("mac") != -1);
+		return (swfIN._memory.user_agent.indexOf("msie 5") != -1 && swfIN._memory.user_agent.indexOf("mac") != -1);
 	},
 	
+	
+	/**
+	 * Is IE7?
+	 * @return {Boolean}
+	 */
 	ie7: function(){
-		var user_agent = navigator.userAgent.toLowerCase();
-		return (user_agent.indexOf("msie 7") != -1);
+		return (swfIN._memory.user_agent.indexOf("msie 7") != -1);
 	},
 	
+	
+	/**
+	 * Is IE?
+	 * @return {Boolean}
+	 */
 	ie: function(){
-		var user_agent = navigator.userAgent.toLowerCase();
-		return (user_agent.indexOf("msie") != -1);
+		return (swfIN._memory.user_agent.indexOf("msie") != -1);
 	},
 	
+	
+	/**
+	 * Is Safari?
+	 * @return {Boolean}
+	 */
+	safari: function(){
+		return (swfIN._memory.user_agent.indexOf("applewebkit") != -1);
+	},
+	
+	
+	/**
+	 * Mac platform?
+	 * @return {Boolean}
+	 */
 	mac: function(){
-		var user_agent = navigator.userAgent.toLowerCase();
-		return (user_agent.indexOf("mac") != -1);
+		return (swfIN._memory.user_agent.indexOf("mac") != -1);
 	},
 	
+	
+	/**
+	 * Does this browser support the netscape plugin architecture (ie: not activex)
+	 * Used for Express Install
+	 * @return {Boolean}
+	 */
 	nsPlugin: function(){
-		return (navigator.plugins && navigator.mimeTypes && navigator.mimeTypes.length);
+		return (navigator.plugins && navigator.mimeTypes && navigator.mimeTypes.length > 0);
 	},
 	
-	////////////////////////////////////////////////////////////
-	// Get width and height of browser (supports old browsers). Returns an object.
-	browserSize: function(){
+	
+	/**
+	 * Get width and height of browser (supports old browsers)
+	 * Returns an object {w:1, h:1}
+	 * @return {Object}
+	 */
+	getBrowserSize: function(){
 		if (self.innerWidth){
 			return {w: self.innerWidth, h: self.innerHeight};
 		}else if (document.documentElement && document.documentElement.clientWidth){
 			return {w: document.documentElement.clientWidth, h: document.documentElement.clientHeight};
 		}else if (document.body){
 			return {w: document.body.clientWidth, h: document.body.clientHeight};
+		}else{
+			return {w:null, h:null};
 		}
-		
-		return false;
 	},
+	
+	
+	/**
+	 * Full screen size
+	 * Returns an object {w:1, h:1}
+	 * @return {Object}
+	 */
+	getFullScreenSize: function(){
+		return {w: screen.width, h: screen.height};
+	},
+	
+	
+	/**
+	 * Available screen size
+	 * Returns an object {w:1, h:1}
+	 * @return {Object}
+	 */
+	getAvailScreenSize: function(){
+		return {w: screen.availWidth, h: screen.availHeight};
+	}
+	
+}
 
-	////////////////////////////////////////////////////////////
-	// Returns installed Flash version
-	getFlashVersion: function(){
-		//IE activeX detection
-		document.writeln('<script language="VBscript">');
-		document.writeln('Function detectActiveXControl(activeXControlName)');
-		document.writeln('  on error resume next');
-		document.writeln('  detectActiveXControl = False');
-		document.writeln('  detectActiveXControl = IsObject(CreateObject(activeXControlName))');
-		document.writeln('End Function');
-		document.writeln('</scr'+'ipt>');
-		
-		var installedVersion = 0;
-		var b = navigator.userAgent.toLowerCase();
-		
-		if ( (b.indexOf('msie') != -1) && (b.indexOf('win') != -1) && (b.indexOf('opera') == -1) ) {
-			
-			//IE
-			if ( fd.tools.ie7() ){
-				//IE7 - for now IMPOSSIBLE TO DETECT, so return a high version and try to embed anyways with a codebase
-				installedVersion = 15;
-				
-			}else{
-				//IE6 and less
-				for (var i=3; i<15; i++){
-					if(detectActiveXControl("ShockwaveFlash.ShockwaveFlash."+i) == true) installedVersion = i;
-				}
-			}
-			
-		} else {
-			//Other browsers
-			if (navigator.plugins["Shockwave Flash"]) {
-				var pluginDesc = navigator.plugins["Shockwave Flash"].description;
-				installedVersion = parseInt( pluginDesc.charAt( pluginDesc.indexOf(".")-1 ) );
-			}
-			
-			//webTV
-			if(b.indexOf("webtv/2.6") != -1) installedVersion = 4;
-			if(b.indexOf("webtv/2.5") != -1) installedVersion = 3;
-			if(b.indexOf("webtv") != -1) installedVersion = 2;
-			
+
+//###############################################################################
+//UTILS LIB
+
+swfIN.utils = {
+	
+	/**
+	 * Prototype-like wrapper, returns a reference to an HTML element based on ID
+	 * @param {String} id
+	 * @return {HTMLDivElement}
+	 */
+	$: function(id){
+		return document.getElementById(id);
+	},
+	
+	
+	/**
+	 * Wrapper to delete a tag by ID
+	 * @param {String} id
+	 * @return {void}
+	 */
+	$delete: function(id){
+		var o = swfIN.utils.$(id);
+		o.parentNode.removeChild(o);
+	},
+	
+	
+	/**
+	 * Splice for arrays and arguments object
+	 * @param {Array} o
+	 * @param {Number} num
+	 * @return {Array}
+	 */
+	splice: function(o, num){
+		var a = [];
+		for(var i = num; i< o.length; i++){
+			a[i-num] = o[i];
+		}
+		return a;
+	},
+	
+	
+	/**
+	 * Delegate, supports extra arguments
+	 * @param {Object} scope
+	 * @param {Function} handler
+	 * @return {Function}
+	 */
+	delegate: function(scope, handler){
+		var _f = function(){
+			var tt = arguments.callee.t;
+			var ff = arguments.callee.f;
+			var aa = arguments.callee.a;
+			return ff.apply(tt, aa);
 		}
 		
-		return installedVersion;	
+		_f.t = scope;
+		_f.f = handler;
+		_f.a = swfIN.utils.splice(arguments, 2);
+		return _f;
 	},
 	
-	screenSize: function(type){
-		//type can be "full", or "avail"
-		if(type == "full") return {w: screen.width, h: screen.height}; 
-		if(type == "avail") return {w: screen.availWidth, h: screen.availHeight};
-		return false;
+	
+	/**
+	 * addEventListener wrapper
+	 * @param {Object} listenerObject
+	 * @param {String} event
+	 * @param {Function} handler
+	 * @return {void}
+	 */
+	addEventListener: function( listenerObject, event, handler ){
+		if(listenerObject.addEventListener) {
+			listenerObject.addEventListener(event, handler, true);
+		}else{
+			listenerObject.attachEvent("on" + event, handler);
+		}
 	},
 	
-	////////////////////////////////////////////////////////////
-	// popUp window launcher
+	
+	/**
+	 * Creates a pretty popup
+	 * @param {String} url
+	 * @param {String} name
+	 * @param {Number} w
+	 * @param {Number} h
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Array} params
+	 * @return {void}
+	 */
 	popUp: function(url, name, w, h, x, y, params){
 		
 		//check fullscreen and center stuff
-		var scr2 = fd.tools.screenSize("full");
-		var scr = fd.tools.screenSize("avail");
+		var scr2 = swfIN.detect.getFullScreenSize();
+		var scr = swfIN.detect.getAvailScreenSize();
 		w = (w == "full") ? scr.w : w;
 		h = (h == "full") ? scr.h : h;
 		
@@ -449,103 +869,36 @@ fd.tools = {
 		win.moveTo(0, 0);
 		win.moveBy(x, y);
 		win.focus();
-	}
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-
-//Array.push() prototype for IE5 on Mac
-if (Array.prototype.push == null){
-	Array.prototype.push=function(val){
-		this[this.length]=val;
-		return this.length;
-	};
-}
-
-
-//getElementByID shortcut - Returns path to an object
-function $id(id){
-	return document.getElementById(id);
-};
-
-
-// Resize listener
-window.onresize = fd.size.refresh;
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// New class wrapper to ease up use - this is only temporary, everything will be fused in a proto structure soon
-
-var swfIN = function(movie, id, w, h, requiredVersion){
-	//keep path the fd object
-	this.fd = fd;
+	}, 
 	
-	//transfer refs
-	this.params = [];
-	this.flashVars = [];
-	this.movie = movie;
-	this.id = id;
-	this.w = w;
-	this.h = h;
-};
-
-swfIN.prototype = {
-	//add param to stack
-	addParam: function(paramName, val){
-		this.params[paramName] = val;
+	
+	/**
+	 * Get a querystring param by key
+	 * @param {String} key
+	 * @return {String}
+	 */
+	getQueryParam: function(key){
+		var val = swfIN.utils.getAllQueryParams()[key];
+		return (val != undefined && val != "") ? val : null ;
 	},
 	
-	//add flash vars to stack
-	addVar: function(varName, val){
-		this.flashVars[varName] = val;
-	},
 	
-	//add multiple flash vars to stack - compatible with fd.tools.getQs()
-	addVars: function(vars){
-		for(var i in vars) this.addVar(i, vars[i]);
-	},
-	
-	minSize: function(minW, minH){
-		if(minW != null) this.w += " : " + minW;
-		if(minH != null) this.h += " : " + minH;
-	},
-	
-	detect: function(requiredVersion, param1, param2, param3){
-		this.requiredVersion = requiredVersion;
+	/**
+	 * Get full querystring
+	 * Returns an array of strings; a[key][val]
+	 * @return {Array}
+	 */
+	getAllQueryParams: function(){
+		var qs=[];
+		var params = window.location.search.substring(1).split("&");
 		
-		//action
-		this.param1 = param1, this.param2 = param2, this.param3 = param3;
-		var temp = "";
-		for(var i=1; i<=3; i++ ){
-			if ( this["param"+i] != null ){
-				if (temp == ""){
-					temp += this["param"+i];
-				}else{
-					temp +=" : "+ this["param"+i];
-				}
-			}
+		for (var i=0; i<params.length; i++) {
+			var keyVal = params[i].split("=");
+			qs[ keyVal[0] ] = keyVal[1];
 		}
 		
-		this.myAction = temp;
-	},
+		return qs;
+	}
 	
-	useExpressInstall: function(){
-		this.express = true;
-	},
-	
-	write: function(){
-		//print
-		this.fd.showFlash(this.movie, this.id, this.params, this.flashVars, this.w, this.h, this.requiredVersion, this.myAction, this.express);
-		
-		//refresh to fix IE table bug
-		this.fd.size.refresh();
-	},
-	
-	
-	//swfIN
-	name: "swfIN 1.0.3  -  2007-03-29",
-	author: "© 2004-2007 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca",
-	desc: "javascript toolkit for flash developers  |  released under the MIT license"
-  
-};
-
+}
+}
