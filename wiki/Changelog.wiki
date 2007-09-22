@@ -79,7 +79,7 @@
 
 
 === 2.0.0 RC1 `(2007-08-15)` === 
-====major release, this is close to being a total rewrite====
+ ====major release, this is close to being a total rewrite====
 
  _HIGHLIGHTS_
   * support for minor player detection (switched to swfObject's detection code)
@@ -94,3 +94,4 @@
   * this release also marks a stop to the Netscape 4 support (let's stop the insanity)
   * ... and much more. Docs coming soon to cover everything.
 
+ 
