@@ -1,0 +1,65 @@
+#summary swfIN's changelog
+
+== swfIN changelog ==
+
+
+=== 2.1.0 `(2007-09-15)` === 
+
+ _NEW_
+  * `swfIN.utils.$delete()` : Delete node by ID
+  * `swfIN.utils.splice()` : Array splice utility that works with the `arguments` object
+  * `swfIN.detect.safari()` : Safari browser detection
+
+ _FIXES_
+  * Automatic fix for the form + External Interface callback bug in IE
+
+ _CHANGES_
+  * SEO div removal now uses `swfIN.utils.$delete()`
+  * new code for `swfIN.utils.delegate()`
+  * the default pluginspage is now http://www.adobe.com/go/getflash/ (used to be http://www.macromedia.com/go/getflashplayer/ )
+
+
+
+
+=== 2.0.2 `(2007-09-10)` === 
+
+ _NEW_
+  * added the `.callback()` method to simplify Flash callbacks (js<->flash). Accepts up to 15 extra arguments
+
+
+
+
+=== 2.0.1 `(2007-09-09)` === 
+
+ _NEW_
+  * added `.useSWFAddress()` to help register a swf in the [http://www.asual.com/swfaddress/ SWFAddress 1.1 engine]
+
+
+
+=== 2.0.0 Final `(2007-09-06)` === 
+ ====built from 2.0.0 RC3, not RC3-a====
+
+ _NEW_
+  * swfIN.utils.delegate()
+  * swfIN.utils.addEventListener
+
+ _FIXES_
+  * conditional wrapping in the whole script so that it supports multiple includes on the same page without breaking
+
+
+
+
+=== 2.0.0 RC3-a `(2007-08-30)` === 
+ ==== internal branch, not released ====
+
+ _MISC_
+  * experiments to try to fix the firefox tab/resize not triggering
+
+
+
+=== `(the rest of the changelog will follow soon)` === 
+ 
+ 
+ 
+ 
+ 
