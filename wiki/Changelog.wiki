@@ -36,12 +36,13 @@
 
 
 
+  
 === 2.0.0 Final `(2007-09-06)` === 
  ====built from 2.0.0 RC3, not RC3-a====
 
  _NEW_
-  * swfIN.utils.delegate()
-  * swfIN.utils.addEventListener
+  * `swfIN.utils.delegate()`
+  * `swfIN.utils.addEventListener()`
 
  _FIXES_
   * conditional wrapping in the whole script so that it supports multiple includes on the same page without breaking
@@ -57,9 +58,39 @@
 
 
 
-=== `(the rest of the changelog will follow soon)` === 
- 
- 
- 
- 
- 
+
+=== 2.0.0 RC3 `(2007-08-17)` === 
+
+ _FIXES_
+  * small tweak in the embed to fix a resize/scrollbar port glitch (thanks to George Kendros for spotting this)
+
+
+
+
+=== 2.0.0 RC2 `(2007-08-16)` === 
+
+ _CHANGES_
+  * Renamed the quersytring methods to `swfIN.utils.getQueryParam()` and `swfIN.utils.getAllQueryParams()` (suggestion from Alec, thanks)
+
+ _DOCS_
+  * Small changes to the examples
+
+
+
+
+=== 2.0.0 RC1 `(2007-08-15)` === 
+====major release, this is close to being a total rewrite====
+
+ _HIGHLIGHTS_
+  * support for minor player detection (switched to swfObject's detection code)
+  * easier express install
+  * removed the old useless actions. You can now only write the embed tag inside a dynamically created div, redirect to a URL or use express install. For anything else, just use the `swfIN.detect.isPlayerVersionValid()` method in a conditional statement.
+  * new alert warnings to make sure devs don't make distraction mistakes
+  * SEO support with the `.hideSEO()` method
+  * event handling instead of the old destructive `window.resize = refresh`
+  * moved development environment to Aptana
+  * Much better naming scheme and hints to static/dynamic/public/private methods and vars
+  * everything is now under the swfIN namespace, so conflicts are less than likely to happen
+  * this release also marks a stop to the Netscape 4 support (let's stop the insanity)
+  * ... and much more. Docs coming soon to cover everything.
+
