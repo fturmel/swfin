@@ -11,6 +11,8 @@
 
 <div id="div_seo">This is the optional content we want Google, outdated browsers and browsers without javascript to see</div>
 
+<div id="noFlashDiv">This div tag will be automatically destroyed if the if Flash player requirements are met</div>
+
 <script type="text/javascript">
 
 	//create the swfIN  |  [required]  |  path to SWF (string), movie's ID (string), width (int: pixel value OR string with trailing %: percent value)
@@ -31,7 +33,11 @@
 	//s.useSWFAddress();
 	
 	//player requirements & redirect URL  |  [optional]  |  required flash version (array), url(string), pass querystring param(boolean)
-	s.detect( [8,0,0] , "update.html", true);
+	//s.detectRedirect( [9,0,28] , "update.html", true);
+	
+	//player requirements & show div
+	s.detectShowDiv( [9,0,28] , "noFlashDiv" );
+	
 	
 	//flashvars  |  [optional]  |  flashVar name (string), flashVar value (Object)
 	s.addVar("test", "http://www.test.com");
