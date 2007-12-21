@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.1.0  -  2007-09-15
+  swfIN 2.2.0  -  2007-12-21
   javascript toolkit for flash developers
   © 2005-2007 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -37,7 +37,7 @@ var swfIN = function(swfPath, swfID, width, height){
 	this.xiWidth = null;
 	this.xiHeight = null;
 	this.is_written = false;
-	
+	this.showDivName = null;	
 	
 	//init windows resize & array proto, but only once!
 	swfIN._static.init();
@@ -89,7 +89,7 @@ swfIN.prototype = {
 		this.scrollbarWidth = width;
 		this.scrollbarHeight = height;
 		
-		if( this.is_written ) this.refresh();
+		if( this.isWritten() ) this.refresh();
 	},
 	
 	
@@ -104,22 +104,47 @@ swfIN.prototype = {
 		this.width = width;
 		this.height = height;
 		
-		if( this.is_written ) this.refresh();
+		if( this.isWritten() ) this.refresh();
 	},
 	
 	
 	/**
 	 * Set the required Flash version, and optional redirect infos
+	 * LEGACY - use detectRedirect
 	 * @param {Array} requiredVersion
 	 * @param {String} redirectURL
 	 * @param {Boolean} redirectUseParams
 	 * @return {void}
 	 */
 	detect: function(requiredVersion, redirectURL, redirectUseParams){
+		this.detectRedirect(requiredVersion, redirectURL, redirectUseParams);
+	},
+	
+	
+	/**
+	 * Set the required Flash version. Will redirect to a URL with optional querystring params if Flash requirements are not met.
+	 * @param {Array} requiredVersion
+	 * @param {String} redirectURL
+	 * @param {Boolean} redirectUseParams
+	 * @return {void}
+	 */
+	detectRedirect: function(requiredVersion, redirectURL, redirectUseParams){
 		this.requiredVersion = requiredVersion;
 		this.redirectURL = redirectURL;
-		this.redirectUseParams = redirectUseParams;
+		this.redirectUseParams = redirectUseParams || false;
 	},
+	
+	
+	/**
+	 * Set the required Flash version. Will destroy the specified div if Flash requirements are met.
+	 * @param {Array} requiredVersion
+	 * @param {String} showDivName
+	 * @param {Boolean} autoHide (optional, defaults to true)
+	 */
+	detectShowDiv: function(requiredVersion, showDivName, autoHide){
+		this.requiredVersion = requiredVersion;
+		this.showDivName = showDivName;
+	},	
 	
 	
 	/**
@@ -236,9 +261,15 @@ swfIN.prototype = {
 			//embed express install swf
 			document.write( this.getHTML() );
 			
+			//flag as written
+			this.is_written = true;
+					
 		}else if ( swfIN.detect.isPlayerVersionValid(this.requiredVersion) || swfIN.utils.getQueryParam("detect") == "false" ){
 			//Flash player OK or detect == false, embed the SWF normally
 			document.write( this.getHTML() );
+			
+			//flag as written
+			this.is_written = true;
 			
 		}else if( this.redirectURL != null ){
 			//redirect to noFlash url
@@ -247,23 +278,37 @@ swfIN.prototype = {
 			
 		}
 		
-		//check for all possible conflicts
-		this._checkForConflicts();
 		
-		//push a reference to the swfIN instance
-		swfIN._memory.swf_stack.push( this );
-		
-		//flag as written
-		this.is_written = true;
-		
-		//refresh size
-		//TODO: will this fix the IE6 table bug, or only the old innerHTML trick will work? Do we still need this?
-		this.refresh();
-		
-		//form fix
-		this._formFix();
+		if (this.isWritten()) {
+			
+			if( this.showDivName ) swfIN.utils.$delete(this.showDivName);
+			
+			//check for all possible conflicts
+			this._checkForConflicts();
+			
+			//push a reference to the swfIN instance
+			swfIN._memory.swf_stack.push(this);
+			
+	
+			//refresh size
+			//TODO: will this fix the IE6 table bug, or only the old innerHTML trick will work? Do we still need this?
+			this.refresh();
+			
+			//form fix
+			this._formFix();
+		}
 		
 	},
+	
+	
+	/**
+	 * Checks if this swfIN instance has been written
+	 * @return {Boolean}
+	 */
+	isWritten: function(){
+		return this.is_written;
+	},
+	
 	
 	
 	/**
@@ -510,14 +555,19 @@ swfIN._static = {
 	
 	
 	/**
-	 * Refreshed the sizes of all swfIN instances
+	 * Refreshed the sizes of all written swfIN instances
 	 * Called by the window.resize
 	 * @return {void}
 	 */
 	refreshAll: function(){
 		//refresh all instances
 		var movies = swfIN._memory.swf_stack;
-		for (var i=0; i<movies.length; i++) movies[i].refresh();
+
+		for (var i=0; i<movies.length; i++){
+			var m = movies[i];
+			if( m.isWritten() ) m.refresh();
+		}
+		
 	}
 	
 	

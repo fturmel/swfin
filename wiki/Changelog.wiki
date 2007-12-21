@@ -3,6 +3,21 @@
 == swfIN changelog ==
 
 
+=== 2.2.0 `(2007-12-21)` === 
+
+ _NEW_
+  * added the `.detectRedirect()` method to redirect to a URL if Flash player requirements are not met (same as `.detect()`)
+  * added the `.detectShowDiv()` method to show a div tag if Flash player requirements are not met
+
+ _FIXES_
+  * swfIN instances are now only refreshed on stage resize if they're successfully embeded
+  
+ _CHANGES_
+  * Using `.detectRedirect()` instead of `.detect()` is now the preferred way to handle detection and redirection
+
+
+
+
 === 2.1.0 `(2007-09-15)` === 
 
  _NEW_
