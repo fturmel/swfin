@@ -3,6 +3,15 @@
 == swfIN changelog ==
 
 
+=== 2.2.1 `(2008-05-20)` === 
+
+ _NEW_
+  * `swfIN.utils.proxyCall(url)` : Loads an external URL through an iframe. Useful for tracking / bypassing crossdomain policies.
+
+ _CHANGES_
+  * Switched to Yahoo! YUI Compressor to compress the toolkit
+
+
 === 2.2.0 `(2007-12-21)` === 
 
  _NEW_

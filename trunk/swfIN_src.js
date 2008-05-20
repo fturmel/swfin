@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.0  -  2007-12-21
+  swfIN 2.2.1  -  2008-05-20
   javascript toolkit for flash developers
-  © 2005-2007 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
+  © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
 
 /*////////////////////////////////////////////////////////////////////////////////////////
@@ -549,6 +549,10 @@ swfIN._static = {
 			
 			//flag as init
 			swfIN._memory.is_init = true;
+			
+			//add the div container for swfIN.utils.useProxy
+			document.write('<iframe src="" id="swfIN_proxy_div" width=1 height=1 style="width:0px; height:0px; border:0px"></iframe>');
+			
 		}
 		
 	}, 
@@ -948,6 +952,16 @@ swfIN.utils = {
 		}
 		
 		return qs;
+	}, 
+	
+	
+	/**
+	 * Uses the proxy iframe created in the init static method
+	 * @param {String} url
+	 * @return {void}
+	 */
+	proxyCall: function(url){
+		document.getElementById("swfIN_proxy_div").src = url;
 	}
 	
 }
