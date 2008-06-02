@@ -418,7 +418,7 @@ swfIN.prototype = {
 		//output
 		var minValues = (this.scrollbarWidth > 0 && this.scrollbarHeight > 0) ? "min-width:"+this.scrollbarWidth + "px; min-height:"+this.scrollbarHeight+"px" : "" ;
 		tag = "<div id='"+this.containerDivID+"' style='width:"+ this._calculateWidth() +"; height:"+ this._calculateHeight() + "; "+ minValues +"'>" + tag + "</div>";
-		alert(tag);
+		
 		return tag;
 		
 	},
