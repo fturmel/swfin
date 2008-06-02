@@ -3,6 +3,12 @@
 == swfIN changelog ==
 
 
+=== 2.2.2 `(2008-06-01)` === 
+
+ _NEW_
+  * `.scrollbarAt();` now adds the min-width and min-height style params to the div wrapper for smoother window resize behavior.
+  
+  
 === 2.2.1 `(2008-05-20)` === 
 
  _NEW_
