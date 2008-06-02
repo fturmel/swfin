@@ -1,4 +1,5 @@
 #summary swfIN's changelog
+#labels Featured
 
 == swfIN changelog ==
 
