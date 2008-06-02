@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.1  -  2008-05-20
+  swfIN 2.2.2  -  2008-06-01
   javascript toolkit for flash developers
-  © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
+  ï¿½ 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
 
 /*////////////////////////////////////////////////////////////////////////////////////////
@@ -373,6 +373,9 @@ swfIN.prototype = {
 		var div = this.getDivRef();
 		div.style.width = this._calculateWidth();
 		div.style.height = this._calculateHeight();
+		
+		if(this.scrollbarWidth) div.style["min-width"] = this.scrollbarWidth + "px";
+		if(this.scrollbarHeight) div.style["min-height"] = this.scrollbarHeight + "px";
 	},
 	
 	
@@ -413,8 +416,9 @@ swfIN.prototype = {
 		tag += "></embed></object>";
 		
 		//output
-		tag = "<div id='"+this.containerDivID+"' style='width:"+ this._calculateWidth() +"; height:"+ this._calculateHeight() +"'>" + tag + "</div>";
-		
+		var minValues = (this.scrollbarWidth > 0 && this.scrollbarHeight > 0) ? "min-width:"+this.scrollbarWidth + "px; min-height:"+this.scrollbarHeight+"px" : "" ;
+		tag = "<div id='"+this.containerDivID+"' style='width:"+ this._calculateWidth() +"; height:"+ this._calculateHeight() + "; "+ minValues +"'>" + tag + "</div>";
+		alert(tag);
 		return tag;
 		
 	},
