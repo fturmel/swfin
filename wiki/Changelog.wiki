@@ -4,10 +4,20 @@
 == swfIN changelog ==
 
 
+=== 2.2.3 `(2008-06-29)` === 
+
+ _NEW_
+  * The `.callback()` method now supports return values. (Thanks to Takashi Mizohata for the suggestion and code)
+
+
+  
+  
 === 2.2.2 `(2008-06-01)` === 
 
  _NEW_
   * `.scrollbarAt()` now adds the min-width and min-height style params to the div wrapper for smoother window resize behavior.
+  
+  
   
   
 === 2.2.1 `(2008-05-20)` === 
@@ -19,6 +29,8 @@
   * Switched to Yahoo! YUI Compressor to compress the toolkit
 
 
+  
+  
 === 2.2.0 `(2007-12-21)` === 
 
  _NEW_

@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.2  -  2008-06-01
+  swfIN 2.2.3  -  2008-06-29
   javascript toolkit for flash developers
-  � 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
+  © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
 
 /*////////////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +170,7 @@ swfIN.prototype = {
 		if( typeof SWFAddress != "undefined" ){
 			SWFAddress.setId( this.getSWFID() );
 		}else{
-			this._error( "Can't find the SWFAddress js lib. Remove the .useSWFAddress() call if you're not using it.");
+			this._error( "Can't find SWFAddress. Remove the .useSWFAddress() call if you're not using it.");
 		}
 	},
 	
@@ -178,7 +178,7 @@ swfIN.prototype = {
 	/**
 	 * Helper for ExternalInterface callbacks. Accepts up to 15 extra args
 	 * @param {String} funk
-	 * @return {void}
+	 * @return {*}
 	 */
 	callback: function(funk){
 		
@@ -188,44 +188,46 @@ swfIN.prototype = {
 		var o = window.document[ this.getSWFID() ];
 		var a = arguments;
 		var f = funk;
-		
+		var r = null;
+
 		if(len > 15) this._error(".callback supports a maximum of 15 extra args. You currently have " + len);
 		
 		switch(len){
 			case 0:
-				o[f](); break;
+				r = o[f](); break;
 			case 1:
-				o[f](a[1]); break;
+				r = o[f](a[1]); break;
 			case 2:
-				o[f](a[1], a[2]); break;
+				r = o[f](a[1], a[2]); break;
 			case 3:
-				o[f](a[1], a[2], a[3]); break;
+				r = o[f](a[1], a[2], a[3]); break;
 			case 4:
-				o[f](a[1], a[2], a[3], a[4]); break;
+				r = o[f](a[1], a[2], a[3], a[4]); break;
 			case 5:
-				o[f](a[1], a[2], a[3], a[4], a[5]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5]); break;
 			case 6:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6]); break;
 			case 7:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7]); break;
 			case 8:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]); break;
 			case 9:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]); break;
 			case 10:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]); break;
 			case 11:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]); break;
 			case 12:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]); break;
 			case 13:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13]); break;
 			case 14:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14]); break;
 			case 15:
-				o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]); break;
+				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]); break;
 		}
 		
+		return r;
 		
 	},
 	
