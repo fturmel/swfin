@@ -4,6 +4,16 @@
 == swfIN changelog ==
 
 
+=== 2.2.4 `(2008-08-03)` === 
+
+ _NEW_
+  * `swfIN.detect.opera()` : Opera browser detection
+  * Mac mousewheel support added, will provide an AS3 class shortly. Tested successfully on OSX with Opera 9.51, Firefox 3.0.1 and Safari 3.1.2
+    Inspired by  http://adomas.org/javascript-mouse-wheel/  and  http://blog.pixelbreaker.com/flash/as30-mousewheel-on-mac-os-x/
+
+
+
+
 === 2.2.3 `(2008-06-29)` === 
 
  _NEW_
