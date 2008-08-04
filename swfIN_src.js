@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.3  -  2008-06-29
+  swfIN 2.2.4  -  2008-08-03
   javascript toolkit for flash developers
   © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -38,6 +38,7 @@ var swfIN = function(swfPath, swfID, width, height){
 	this.xiHeight = null;
 	this.is_written = false;
 	this.showDivName = null;	
+	this.isUsingMacMousewheel = false;	
 	
 	//init windows resize & array proto, but only once!
 	swfIN._static.init();
@@ -172,6 +173,15 @@ swfIN.prototype = {
 		}else{
 			this._error( "Can't find SWFAddress. Remove the .useSWFAddress() call if you're not using it.");
 		}
+	},
+	
+	
+	/**
+	 * Required to reroute mousewheel events to swf (for mac support)
+	 * @return {void}
+	 */
+	useMacMousewheel: function(){
+		this.isUsingMacMousewheel = true;
 	},
 	
 	
@@ -550,6 +560,12 @@ swfIN._static = {
 				}
 			}
 			
+			//add listeners for mac mousehweel support
+			if( swfIN.detect.mac() ){
+				swfIN.utils.addEventListener(window, "DOMMouseScroll", swfIN._static.sendMousewheel);
+				swfIN.utils.addEventListener(document, "mousewheel", swfIN._static.sendMousewheel);
+			}
+			
 			//add a listener to the window's resize event
 			swfIN.utils.addEventListener(window, "resize", swfIN._static.refreshAll);
 			
@@ -577,6 +593,43 @@ swfIN._static = {
 			var m = movies[i];
 			if( m.isWritten() ) m.refresh();
 		}
+		
+	},
+	
+	
+	/**
+	 * Captures mouse events and routes them to all swfs
+	 * Only activated on mac
+	 * @param {Event} event
+	 * @return {void}
+	 */
+	sendMousewheel: function( event ){
+		
+		//figure out proper delta
+        var delta = 0;
+        if (event.wheelDelta) {
+			delta = event.wheelDelta / 40;
+        } else if (event.detail) {
+            delta = -event.detail;
+        }
+		
+		
+		//if delta is not 0, sent to all swfIN instances that are set to receive the event
+        if (delta) {
+			var movies = swfIN._memory.swf_stack;
+			
+			for (var i=0; i<movies.length; i++){
+				var m = movies[i];
+				if( m.isWritten() && m.isUsingMacMousewheel ){
+					m.callback("externalMouseEvent", delta);
+				}
+			}
+		}
+		
+		
+		//block event bubbling
+        if(event.preventDefault) event.preventDefault();
+		event.returnValue = false;
 		
 	}
 	
@@ -730,6 +783,15 @@ swfIN.detect = {
 	 */
 	safari: function(){
 		return (swfIN._memory.user_agent.indexOf("applewebkit") != -1);
+	},
+	
+	
+	/**
+	 * Is Opera?
+	 * @return {Boolean}
+	 */
+	opera: function(){
+		return (window.opera);
 	},
 	
 	
