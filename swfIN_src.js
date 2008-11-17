@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.4  -  2008-08-03
+  swfIN 2.2.5  -  2008-11-17
   javascript toolkit for flash developers
   © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -627,9 +627,9 @@ swfIN._static = {
 		}
 		
 		
-		//block event bubbling
-        if(event.preventDefault) event.preventDefault();
-		event.returnValue = false;
+		//stop event bubbling
+        //if(event.preventDefault) event.preventDefault();
+		//event.returnValue = false;
 		
 	}
 	
