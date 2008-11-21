@@ -12,9 +12,9 @@
  _CHANGES_
   * Removed the swfIN.utils.proxyCall() method and it's iframe tag. Figured out that this can be handled from Flash directly with ExternalInterface like so:
 {{{
-	public static function jsProxyCall(url:String):void {
-		ExternalInterface.call("function(url){ new Image().src = url; }", url);
-	}
+public static function jsProxyCall(url:String):void {
+	ExternalInterface.call("function(url){ new Image().src = url; }", url);
+}
 }}}
   
   
