@@ -4,10 +4,26 @@
 == swfIN changelog ==
 
 
+=== 2.2.6 `(2008-11-21)` === 
+
+ _FIXES_
+  * The `.callback()` method has been rewritten properly using eval() so it can scale to take any number or arguments.
+  
+ _CHANGES_
+  * Removed the swfIN.utils.proxyCall() method and it's iframe tag. Figured out that this can be handled from Flash directly with ExternalInterface like so:
+{{{
+	public static function jsProxyCall(url:String):void {
+		ExternalInterface.call("function(url){ new Image().src = url; }", url);
+	}
+}}}
+  
+  
+  
+  
 === 2.2.5 `(2008-11-17)` === 
 
  _FIXES_
-  * swfIN trapped the mouse wheel event uselessly on macs if you didn't call .useMacMousewheel(). Thanks to Jason & Louis for the report.
+  * swfIN trapped the mouse wheel event uselessly on macs if you didn't call `.useMacMousewheel()`. Thanks to Jason & Louis for the report.
 
 
 
