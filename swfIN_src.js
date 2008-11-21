@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.5  -  2008-11-17
+  swfIN 2.2.6  -  2008-11-21
   javascript toolkit for flash developers
   © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -60,7 +60,7 @@ swfIN.prototype = {
 	
 	/**
 	 * Add a flashVar
-	 * @param {Object} name
+	 * @param {String} name
 	 * @param {Object} val
 	 * @return {void}
 	 */
@@ -186,59 +186,20 @@ swfIN.prototype = {
 	
 	
 	/**
-	 * Helper for ExternalInterface callbacks. Accepts up to 15 extra args
+	 * Helper for ExternalInterface callbacks
 	 * @param {String} funk
 	 * @return {*}
 	 */
 	callback: function(funk){
-		
-		//can't use apply since it's not really a function from the DOM
-		
-		var len = arguments.length - 1;
 		var o = window.document[ this.getSWFID() ];
 		var a = arguments;
 		var f = funk;
-		var r = null;
-
-		if(len > 15) this._error(".callback supports a maximum of 15 extra args. You currently have " + len);
 		
-		switch(len){
-			case 0:
-				r = o[f](); break;
-			case 1:
-				r = o[f](a[1]); break;
-			case 2:
-				r = o[f](a[1], a[2]); break;
-			case 3:
-				r = o[f](a[1], a[2], a[3]); break;
-			case 4:
-				r = o[f](a[1], a[2], a[3], a[4]); break;
-			case 5:
-				r = o[f](a[1], a[2], a[3], a[4], a[5]); break;
-			case 6:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6]); break;
-			case 7:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7]); break;
-			case 8:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]); break;
-			case 9:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]); break;
-			case 10:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]); break;
-			case 11:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]); break;
-			case 12:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]); break;
-			case 13:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13]); break;
-			case 14:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14]); break;
-			case 15:
-				r = o[f](a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]); break;
+		var expression = "";
+		for( var i = 1; i < arguments.length; i++){
+			expression += (i == 1) ? "a["+i+"]" : ", a["+i+"]";
 		}
-		
-		return r;
-		
+		return eval( "o[f]("+ expression +");" );
 	},
 	
 	
@@ -413,7 +374,7 @@ swfIN.prototype = {
 		p["pluginspage"] = swfIN._memory.player_download;
 		p["allowScriptAccess"] = "always";
 		p["FlashVars"] = fv;
-		
+
 		
 		//then use user's version to override the default
 		for(var i in this.params) p[i] = this.params[i];
@@ -571,9 +532,6 @@ swfIN._static = {
 			
 			//flag as init
 			swfIN._memory.is_init = true;
-			
-			//add the div container for swfIN.utils.useProxy
-			document.write('<iframe src="" id="swfIN_proxy_div" width=1 height=1 style="width:0px; height:0px; border:0px"></iframe>');
 			
 		}
 		
@@ -1020,16 +978,6 @@ swfIN.utils = {
 		}
 		
 		return qs;
-	}, 
-	
-	
-	/**
-	 * Uses the proxy iframe created in the init static method
-	 * @param {String} url
-	 * @return {void}
-	 */
-	proxyCall: function(url){
-		document.getElementById("swfIN_proxy_div").src = url;
 	}
 	
 }
