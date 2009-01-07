@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.6  -  2008-11-21
+  swfIN 2.2.7  -  2009-01-07
   javascript toolkit for flash developers
-  © 2005-2008 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
+  © 2005-2009 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
 
 /*////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,9 @@ swfIN.prototype = {
 	 * @return {void}
 	 */
 	addVars: function(vars){
-		for(var i in vars) this.addVar(i, vars[i]);
+		for(var i in vars){
+			if(typeof vars[i] != "function") this.addVar(i, vars[i]);
+		}
 	},
 	
 	
@@ -361,8 +363,10 @@ swfIN.prototype = {
 		//flashvars
 		var fv = "";
 		for(var i in this.flashVars){
-			var mod = (fv == "") ? "" : "&";
-			fv += mod + i + "=" + escape(this.flashVars[i]);
+			if(typeof this.flashVars[i] != "function"){
+				var mod = (fv == "") ? "" : "&";
+				fv += mod + i + "=" + escape(this.flashVars[i]);
+			}
 		}
 		
 		
@@ -377,15 +381,24 @@ swfIN.prototype = {
 
 		
 		//then use user's version to override the default
-		for(var i in this.params) p[i] = this.params[i];
+		for(var i in this.params){
+			if (typeof this.params[i] != "function") p[i] = this.params[i];
+		}
 		
 		//compile the object & embed tag
 		var tag = "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' "+" id='"+this.swfID+"' width='100%' height='100%' align='top' hspace='0' vspace='0'><param name='movie' value='"+this.swfPath+"'>";
 		
 		//place params in tag
-		for(var i in p) tag += "<param name='"+i+"' value='"+p[i]+"'>";
+		for(var i in p){
+			if (typeof p[i] != "function") tag += "<param name='"+i+"' value='"+p[i]+"'>";
+		}
+		
 		tag += "<embed src='"+this.swfPath+"' width='100%' height='100%' align='top' hspace='0' vspace='0' type='application/x-shockwave-flash' name='"+this.swfID+"' ";
-		for(var i in p) tag += i+"='"+p[i]+"' ";
+		
+		for(var i in p){
+			if (typeof p[i] != "function") tag += i+"='"+p[i]+"' ";
+		}
+		
 		tag += "></embed></object>";
 		
 		//output
@@ -935,11 +948,15 @@ swfIN.utils = {
 		p["fullscreen"] = 0;  //IE only fullscreen mode - it goes above the taskbar...
 		
 		//overwrite default params with custom ones
-		for(var i in params) p[i] = params[i];
+		for(var i in params){
+			if (typeof params[i] != "function") p[i] = params[i];
+		}
 		
 		//compile final extras string
 		var finalExtras = "";
-		for(var i in p) finalExtras += (finalExtras == "") ? i+"="+p[i]  : ","+i+"="+p[i];
+		for(var i in p){
+			if (typeof p[i] != "function") finalExtras += (finalExtras == "") ? i+"="+p[i]  : ","+i+"="+p[i];
+		}
 		
 		//open window	
 		var win = window.open(url, name, finalExtras);
