@@ -7,7 +7,7 @@
 === 2.2.7 `(2009-01-07)` === 
 
  _FIXES_
-  * Workaround to Prototype's Array and Object prototype "polluting" problem. Issue #9, "swfIN + Prototype embed contains strange code" http://code.google.com/p/swfin/issues/detail?id=9
+  * Workaround to Prototype's Array and Object prototype "polluting" problem. Issue #9, "swfIN + Prototype embed contains strange code"
   
   
   
