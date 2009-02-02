@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.7  -  2009-01-07
+  swfIN 2.2.8  -  2009-02-02
   javascript toolkit for flash developers
   © 2005-2009 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -505,7 +505,11 @@ swfIN.prototype = {
 	 * @return {void}
 	 */
 	_error: function(msg){
-		alert("swfIN error!\n"+msg);
+		//alert("swfIN error!\n"+msg);
+		//throw "swfIN error!\n" + msg;
+		try{
+			console.error("swfIN error!\n" + msg);
+		}catch(e){}
 	}
 	
   
