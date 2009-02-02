@@ -4,6 +4,14 @@
 == swfIN changelog ==
 
 
+=== 2.2.8 `(2009-02-02)` === 
+
+ _CHANGES_
+  * swfIN errors now output to Firebug using console.error() instead of showing in an alert box
+  
+
+
+  
 === 2.2.7 `(2009-01-07)` === 
 
  _FIXES_
