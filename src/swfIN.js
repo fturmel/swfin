@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.2.8  -  2009-02-02
+  swfIN 2.3.0  -  2009-02-05
   javascript toolkit for flash developers
   © 2005-2009 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -37,8 +37,9 @@ var swfIN = function(swfPath, swfID, width, height){
 	this.xiWidth = null;
 	this.xiHeight = null;
 	this.is_written = false;
-	this.showDivName = null;	
-	this.isUsingMacMousewheel = false;	
+	this.showDivName = null;
+	this.showDivStyleMemory = null;
+	this.isUsingMacMousewheel = false;
 	
 	//init windows resize & array proto, but only once!
 	swfIN._static.init();
@@ -59,6 +60,18 @@ swfIN.prototype = {
 	
 	
 	/**
+	 * Adds multiple embed params
+	 * @param {Object} params
+	 * @return {void}
+	 */
+	addParams: function(params){
+		for(var i in params){
+			if(typeof params[i] != "function") this.addParam(i, params[i]);
+		}
+	},
+	
+	
+	/**
 	 * Add a flashVar
 	 * @param {String} name
 	 * @param {Object} val
@@ -71,7 +84,7 @@ swfIN.prototype = {
 	
 	/**
 	 * Add multiple flashVars. Note: works well with swfIN.utils.getAllQueryParams()
-	 * @param {Array} vars
+	 * @param {Object} vars
 	 * @return {void}
 	 */
 	addVars: function(vars){
@@ -201,7 +214,15 @@ swfIN.prototype = {
 		for( var i = 1; i < arguments.length; i++){
 			expression += (i == 1) ? "a["+i+"]" : ", a["+i+"]";
 		}
-		return eval( "o[f]("+ expression +");" );
+		
+		var result = null;
+		try{
+			result = eval( "o[f]("+ expression +");" );
+		}catch(err){
+			this._error("callback function \"" + funk + "\" failed");
+		}
+		
+		return result;
 	},
 	
 	
@@ -215,9 +236,8 @@ swfIN.prototype = {
 		if( !swfIN.detect.isPlayerVersionValid(this.requiredVersion) && swfIN.detect.isPlayerVersionValid(swfIN._memory.expressInstallVersion) && this.xiPath != null && swfIN.utils.getQueryParam("detect") != "false" ){
 			//embed the express install swf
 			
-			//noscale
-			//TODO:REMOVE THIS eventually when I build my own xi.swf, it should have noScale built-in with code
-			this.addParam("scale", "noScale");
+			//NOTE: if the express install process fails or the user selects "no", the swfIN._static.expressInstallFailed() method will be called
+			//and will allow for a redirection or hidden div
 			
 			//express install flashVars
 			document.title = document.title.slice(0, 47) + " - Flash Player Installation";
@@ -256,7 +276,11 @@ swfIN.prototype = {
 		
 		if (this.isWritten()) {
 			
-			if( this.showDivName ) swfIN.utils.$delete(this.showDivName);
+			if( this.showDivName ){
+				var style = swfIN.utils.$(this.showDivName).style;
+				this.showDivStyleMemory = {visibility:style.visibility, position:style.position};
+				swfIN.utils.$hide(this.showDivName);
+			}
 			
 			//check for all possible conflicts
 			this._checkForConflicts();
@@ -271,6 +295,14 @@ swfIN.prototype = {
 			
 			//form fix
 			this._formFix();
+		}else{
+
+			if( this.showDivName ){
+				var style = swfIN.utils.$(this.showDivName).style;
+				style.visibility = this.showDivStyleMemory.visibility;
+				style.position = this.showDivStyleMemory.position;
+			}
+			
 		}
 		
 	},
@@ -606,8 +638,32 @@ swfIN._static = {
         //if(event.preventDefault) event.preventDefault();
 		//event.returnValue = false;
 		
-	}
+	},
 	
+	
+	/**
+	 * Called from xi.swf
+	 * User clicked "no" in the prompt or the minimum os/flash version requirements for express install weren't met
+	 * @return {void}
+	 */
+	expressInstallFailed: function(){
+		
+		var movies = swfIN._memory.swf_stack;
+		for(var i in movies){
+			if (typeof movies[i] != "function"){
+				var m = movies[i];
+				
+				swfIN.utils.$delete( m.getDivID() );
+				m.is_written = false;
+				
+				movies = swfIN.utils.splice(movies, i, 1);
+				swfIN._memory.swf_stack = movies;
+				
+				m.xiPath = null;
+				m.write();
+			}
+		}
+	}
 	
 }
 
@@ -620,7 +676,7 @@ swfIN._memory = {
 	
 	swf_stack: [],
 	is_init: false,
-	player_download: "http://www.adobe.com/go/getflash/", //http://www.macromedia.com/go/getflashplayer
+	player_download: "http://get.adobe.com/flashplayer/",
 	user_agent: navigator.userAgent.toLowerCase(),
 	expressInstallMinSize:{w:214, h:137},
 	expressInstallVersion: [6,0,65],
@@ -753,11 +809,11 @@ swfIN.detect = {
 	
 	
 	/**
-	 * Is Safari?
+	 * Is Webkit? (Safari, Chrome)
 	 * @return {Boolean}
 	 */
-	safari: function(){
-		return (swfIN._memory.user_agent.indexOf("applewebkit") != -1);
+	webkit: function(){
+		return (swfIN._memory.user_agent.indexOf("webkit") != -1);
 	},
 	
 	
@@ -766,7 +822,7 @@ swfIN.detect = {
 	 * @return {Boolean}
 	 */
 	opera: function(){
-		return (window.opera);
+		return (window.opera != null);
 	},
 	
 	
@@ -854,17 +910,34 @@ swfIN.utils = {
 		o.parentNode.removeChild(o);
 	},
 	
+	/**
+	 * Sets an element's visibility to hidden
+	 * @param {String} id
+	 * @return {void}
+	 */
+	$hide: function(id){
+		var style = swfIN.utils.$(id).style;
+		style.visibility = "hidden";
+		style.position = "absolute";
+	},
+	
 	
 	/**
 	 * Splice for arrays and arguments object
 	 * @param {Array} o
-	 * @param {Number} num
+	 * @param {Number} index
+	 * @param {Number} count (optional)
 	 * @return {Array}
 	 */
-	splice: function(o, num){
+	splice: function(o, num, count){
 		var a = [];
+		if(count == null) count = o.length - num;
+		var counter = 0;
+
 		for(var i = num; i< o.length; i++){
-			a[i-num] = o[i];
+			if(++counter < count){
+				 a[i-num] = o[i];	
+			}
 		}
 		return a;
 	},
@@ -986,18 +1059,18 @@ swfIN.utils = {
 	
 	/**
 	 * Get full querystring
-	 * Returns an array of strings; a[key][val]
-	 * @return {Array}
+	 * Returns an object with strings
+	 * @return {Object}
 	 */
 	getAllQueryParams: function(){
-		var qs=[];
+		var qs={};
 		var params = window.location.search.substring(1).split("&");
 		
 		for (var i=0; i<params.length; i++) {
 			var keyVal = params[i].split("=");
 			qs[ keyVal[0] ] = keyVal[1];
 		}
-		
+
 		return qs;
 	}
 	
