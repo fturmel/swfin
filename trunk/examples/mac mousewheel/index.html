@@ -1,0 +1,27 @@
+<!-- saved from url=(0013)about:internet -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<script type="text/javascript" src="../../src/swfIN.js"></script>
+<title>swfIN</title>
+<style type="text/css">  body, html {margin:0; padding:0; height:100%} </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+	var s = new swfIN("macMousewheel.swf", "myMovie", "100%", "100%");
+	
+	//will call the "externalMouseEvent" callback to send mousewheel events to Flash. You can use PixelBreaker's AS3 class for this.
+	//http://blog.pixelbreaker.com/flash/as30-mousewheel-on-mac-os-x/
+	s.useMacMousewheel();
+	
+	s.addParam("bgcolor", "#333333");
+	s.addParam("menu", "false");
+	s.write();
+	
+</script><noscript>Javascript must be enabled to view this site</noscript>
+
+</body>
+</html>

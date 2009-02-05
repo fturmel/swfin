@@ -3,40 +3,25 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<script type="text/javascript" src="../../src/swfIN.js"></script>
+<script type="text/javascript" src="swfaddress.js"></script>
 <title>swfIN</title>
-<script type="text/javascript" src="../swfIN_src.js"></script>
-
 <style type="text/css">  body, html {margin:0; padding:0; height:100%} </style>
 </head>
 <body>
 
-<div id="div_seo">This is the optional content we want Google, outdated browsers and browsers without javascript to see</div>
-
-<form>
-
 <script type="text/javascript">
+
+	var s = new swfIN("SWFAddressDemo.swf", "myMovie", "100%", "100%");
+	s.scrollbarAt(800, 600);
 	
-	var s = new swfIN("callbackTest.swf", "myMovie", 500, 500);
-	
-	s.detect( [9,0,0] , "update.html", true);
-	
-	s.addParam("bgcolor", "#DDDDDD");
-	s.addParam("menu", "false");
-	
-	s.hideSEO("div_seo");
+	//hook into SWFAddress
+	//http://www.asual.com/swfaddress/
+	s.useSWFAddress();
 	
 	s.write();
 	
-	
-	function testing(){
-		var r = s.callback("inject", "hello", 48);
-		alert(r);
-	}
-	
 </script><noscript>Javascript must be enabled to view this site</noscript>
-
-</form>
-
 
 </body>
 </html>

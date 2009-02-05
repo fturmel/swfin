@@ -1,0 +1,35 @@
+<!-- saved from url=(0013)about:internet -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<script type="text/javascript" src="../../src/swfIN.js"></script>
+<title>swfIN</title>
+<style type="text/css">  body, html {margin:0; padding:0; height:100%; background-color:#333333} </style>
+</head>
+<body>
+
+<form>
+
+	<script type="text/javascript">
+		
+		//NOTE: swfIN contains a fix for javascript callbacks with SWFs embedded inside a form tag
+		
+		var s = new swfIN("callbackTest.swf", "myMovie", 500, 500);
+		
+		s.addParam("bgcolor", "#333333");
+		s.addParam("menu", "false");
+		
+		s.write();
+		
+		function testing(){
+			var r = s.callback("inject", "hello", 48);
+			alert(r);
+		}
+		
+	</script><noscript>Javascript must be enabled to view this site</noscript>
+
+</form>
+
+</body>
+</html>

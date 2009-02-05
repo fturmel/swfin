@@ -4,6 +4,30 @@
 == swfIN changelog ==
 
 
+=== 2.3.0 `(2009-02-05)` === 
+ 
+ _NEW_
+  * `.addParams()` method can now be used to pass embed parameters as objects/JSON format (Issue #8)
+  * Express install SWF sources and small tweaks (Issue #2)
+  * Reorganized project structure
+  * cleaned up old examples and added new ones
+  * `swfIN.utils.$hide()` helper to hide a div
+ 
+ _FIXES_
+  * Express install now works properly along with `.detectRedirect()` and `.detectShowDiv()`, and will properly fallback to either of those methods if it fails
+  * If `.callback()` fails, it will now output an error to Firebug console
+ 
+ _CHANGES_
+  * `.detectShowDiv()` hides the div instead of destroying it to allow express install fallback
+  * Express install embed does not set the scale param to "noscale" anymore, this behavior is handled by the express install SWF itself
+  * swfIN._memory.player_download now points to http://get.adobe.com/flashplayer/
+  * Removed `swfIN.detect.safari()` detection and replaced it with `swfIN.detect.webkit()` to cover Safari and Chrome more accurately
+  * Tweaked `swfIN.detect.opera()` so it properly returns a boolean
+  * Added an optional count argument to the `swfIN.utils.splice()` function
+  
+  
+
+
 === 2.2.8 `(2009-02-02)` === 
 
  _CHANGES_

@@ -3,8 +3,8 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<script type="text/javascript" src="../../src/swfIN.js"></script>
 <title>swfIN</title>
-<script type="text/javascript" src="../swfIN_src.js"></script>
 <style type="text/css">  body, html {margin:0; padding:0; height:100%} </style>
 </head>
 <body>
@@ -13,32 +13,46 @@
 
 <script type="text/javascript">
 
-	//create the swfIN  |  [required]  |  path to SWF (string), movie's ID (string), width (int: pixel value OR string with trailing %: percent value)
-	var s = new swfIN("movie.swf", "myMovie", "100%", "100%");
+	var s = new swfIN("../_shared/movie.swf", "myMovie", "100%", "100%");
 	
 	//force a minimum size when resizing browser or screen resolution too small |  [optional]  |  width (int: pixel value), height (int: pixel value)
 	//note: this only work well if the page has no margins and you use 100% in the constructor
 	s.scrollbarAt(800, 600);
 	
-	//express install  |  optional  |  express install swf path(string), width(number), height(number)
+	//express install  |  optional  |  express install swf path(string), width(number or string), height(number or string)
 	//optional width & height; they can be omitted, null, ints or strings
 	//note: if omitted, they will use the size defined in the constructor
 	//note: if the width/height are 100%, they will still obey the scrollbarAt() settings
-	s.useExpressInstall("../xi.swf", 300, 300);
+	s.useExpressInstall("../../dist/xi.swf", "100%", "100%");
+	
+	//hook into SWFAddress
+	//http://www.asual.com/swfaddress/
+	//s.useSWFAddress();
+	
+	//will call the "externalMouseEvent" callback to send mousewheel events to Flash. You can use PixelBreaker's AS3 class for this.
+	//http://blog.pixelbreaker.com/flash/as30-mousewheel-on-mac-os-x/
+	//s.useMacMousewheel();
 	
 	//player requirements & redirect URL  |  [optional]  |  required flash version (array), url(string), pass querystring param(boolean)
-	s.detect( [10,0,0] , "update.html", true);
+	s.detectRedirect( [9,0,28] , "update.html", true);
 	
-	//flashvars  |  [optional]  |  flashVar name (string), flashVar value (Object)
+	//player requirements & show div
+	//s.detectShowDiv( [9,0,28] , "noFlashDiv" );
+	
+	
+	//flashvars  |  [optional]  |  flashVar name (string), flashVar value (*)
 	s.addVar("test", "http://www.test.com");
-	s.addVar("hello", swfIN.utils.getQueryParam("hello") );  //read through querystring as  index.html?hello=test
+	//s.addVar("hello", swfIN.utils.getQueryParam("hello") );  //read querystring params
 	//s.addVars( swfIN.utils.getAllQueryParams() );  //pass the whole querystring as params - notice the method's name: .addVars()
+	//s.addVars( {test1:20, test2:"hello world"} ); //you can also use objects/JSON format with .addVars()
 	
 	//swf params  |  [optional]  |  param name (string), param value (string)
-	s.addParam("bgcolor", "#400000");
+	s.addParam("bgcolor", "#333333");
 	s.addParam("menu", "false");
+	//s.addParams({bgcolor:"#333333", menu:false}); //you can also use objects/JSON format with .addParams()
 	
-	//hide the SEO div  |  [optional]  |  seodiv name (string)
+	
+	//hide the SEO div  |  [optional]  |  seo div name (string)
 	s.hideSEO("div_seo");
 	
 	//write the tag  |  [required]
