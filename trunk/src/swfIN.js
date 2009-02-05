@@ -1,6 +1,6 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.3.0  -  2009-02-05
+  swfIN 2.3.1  -  2009-02-05
   javascript toolkit for flash developers
   © 2005-2009 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
@@ -66,7 +66,7 @@ swfIN.prototype = {
 	 */
 	addParams: function(params){
 		for(var i in params){
-			if(typeof params[i] != "function") this.addParam(i, params[i]);
+			if(params.hasOwnProperty(i)) this.addParam(i, params[i]);
 		}
 	},
 	
@@ -89,7 +89,7 @@ swfIN.prototype = {
 	 */
 	addVars: function(vars){
 		for(var i in vars){
-			if(typeof vars[i] != "function") this.addVar(i, vars[i]);
+			if(vars.hasOwnProperty(i)) this.addVar(i, vars[i]);
 		}
 	},
 	
@@ -395,7 +395,7 @@ swfIN.prototype = {
 		//flashvars
 		var fv = "";
 		for(var i in this.flashVars){
-			if(typeof this.flashVars[i] != "function"){
+			if(this.flashVars.hasOwnProperty(i)){
 				var mod = (fv == "") ? "" : "&";
 				fv += mod + i + "=" + escape(this.flashVars[i]);
 			}
@@ -414,7 +414,7 @@ swfIN.prototype = {
 		
 		//then use user's version to override the default
 		for(var i in this.params){
-			if (typeof this.params[i] != "function") p[i] = this.params[i];
+			if (this.params.hasOwnProperty(i)) p[i] = this.params[i];
 		}
 		
 		//compile the object & embed tag
@@ -422,13 +422,13 @@ swfIN.prototype = {
 		
 		//place params in tag
 		for(var i in p){
-			if (typeof p[i] != "function") tag += "<param name='"+i+"' value='"+p[i]+"'>";
+			if (p.hasOwnProperty(i)) tag += "<param name='"+i+"' value='"+p[i]+"'>";
 		}
 		
 		tag += "<embed src='"+this.swfPath+"' width='100%' height='100%' align='top' hspace='0' vspace='0' type='application/x-shockwave-flash' name='"+this.swfID+"' ";
 		
 		for(var i in p){
-			if (typeof p[i] != "function") tag += i+"='"+p[i]+"' ";
+			if (p.hasOwnProperty(i)) tag += i+"='"+p[i]+"' ";
 		}
 		
 		tag += "></embed></object>";
@@ -650,7 +650,7 @@ swfIN._static = {
 		
 		var movies = swfIN._memory.swf_stack;
 		for(var i in movies){
-			if (typeof movies[i] != "function"){
+			if (movies.hasOwnProperty(i)){
 				var m = movies[i];
 				
 				swfIN.utils.$delete( m.getDivID() );
@@ -1026,13 +1026,13 @@ swfIN.utils = {
 		
 		//overwrite default params with custom ones
 		for(var i in params){
-			if (typeof params[i] != "function") p[i] = params[i];
+			if (params.hasOwnProperty(i)) p[i] = params[i];
 		}
 		
 		//compile final extras string
 		var finalExtras = "";
 		for(var i in p){
-			if (typeof p[i] != "function") finalExtras += (finalExtras == "") ? i+"="+p[i]  : ","+i+"="+p[i];
+			if (p.hasOwnProperty(i)) finalExtras += (finalExtras == "") ? i+"="+p[i]  : ","+i+"="+p[i];
 		}
 		
 		//open window	

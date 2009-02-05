@@ -4,6 +4,14 @@
 == swfIN changelog ==
 
 
+=== 2.3.1 `(2009-02-05)` === 
+ 
+ _CHANGES_
+  * Changed the code that fixes the prototype pollution/for..in iteration problems to use .hasOwnProperty(). Smaller and more accurate. ( Issue #9 )
+
+  
+  
+
 === 2.3.0 `(2009-02-05)` === 
  
  _NEW_
