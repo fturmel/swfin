@@ -20,7 +20,7 @@
  _CHANGES_
   * `.detectShowDiv()` hides the div instead of destroying it to allow express install fallback
   * Express install embed does not set the scale param to "noscale" anymore, this behavior is handled by the express install SWF itself
-  * swfIN._memory.player_download now points to http://get.adobe.com/flashplayer/
+  * Default pluginspage is now http://get.adobe.com/flashplayer/
   * Removed `swfIN.detect.safari()` detection and replaced it with `swfIN.detect.webkit()` to cover Safari and Chrome more accurately
   * Tweaked `swfIN.detect.opera()` so it properly returns a boolean
   * Added an optional count argument to the `swfIN.utils.splice()` function
@@ -39,7 +39,7 @@
 === 2.2.7 `(2009-01-07)` === 
 
  _FIXES_
-  * Workaround to Prototype's Array and Object prototype "polluting" problem. Issue #9, "swfIN + Prototype embed contains strange code"
+  * Workaround to Prototype's Array and Object prototype "polluting" problem. (Issue #9)
   
   
   
@@ -141,7 +141,7 @@ public static function jsProxyCall(url:String):void {
 === 2.0.2 `(2007-09-10)` === 
 
  _NEW_
-  * added the `.callback()` method to simplify Flash callbacks (js<->flash). Accepts up to 15 extra arguments
+  * added the `.callback()` method to simplify Flash callbacks (js < - > flash). Accepts up to 15 extra arguments
 
 
 
