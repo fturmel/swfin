@@ -1,8 +1,8 @@
 /*////////////////////////////////////////////////////////////////////////////////////////
 
-  swfIN 2.3.1  -  2009-02-05
+  swfIN 2.4.0  -  2010-07-26
   javascript toolkit for flash developers
-  © 2005-2009 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
+  © 2005-2010 Francis Turmel  |  swfIN.nectere.ca  |  www.nectere.ca  |  francis@nectere.ca
   released under the MIT license
 
 /*////////////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +206,7 @@ swfIN.prototype = {
 	 * @return {*}
 	 */
 	callback: function(funk){
-		var o = window.document[ this.getSWFID() ];
+		var o = this.getSWFRef();
 		var a = arguments;
 		var f = funk;
 		
@@ -217,7 +217,11 @@ swfIN.prototype = {
 		
 		var result = null;
 		try{
-			result = eval( "o[f]("+ expression +");" );
+			if (o[f]){
+				result = eval("o[f](" + expression + ");");
+			}else{
+				this._error("callback function \"" + funk + "\" does not exist");
+			}
 		}catch(err){
 			this._error("callback function \"" + funk + "\" failed");
 		}
@@ -401,9 +405,9 @@ swfIN.prototype = {
 			}
 		}
 		
-		
-		//param/name array DEFAULTS
-		var p = [];
+		//params default
+		var p = {};
+		p["movie"] = this.swfPath;
 		p["quality"] = "high";
 		p["menu"] = "false";
 		p["swLiveConnect"] = "true";
@@ -411,27 +415,36 @@ swfIN.prototype = {
 		p["allowScriptAccess"] = "always";
 		p["FlashVars"] = fv;
 
-		
-		//then use user's version to override the default
+		//override default with user defined params
 		for(var i in this.params){
 			if (this.params.hasOwnProperty(i)) p[i] = this.params[i];
 		}
 		
-		//compile the object & embed tag
-		var tag = "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' "+" id='"+this.swfID+"' width='100%' height='100%' align='top' hspace='0' vspace='0'><param name='movie' value='"+this.swfPath+"'>";
+		//object attributes
+		var a = {data:this.swfPath, name:this.swfID, id:this.swfID, width:"100%", height:"100%", align:"top", hspace:0, vspace:0};
 		
-		//place params in tag
+		if( swfIN.detect.ie() ){
+			a.classid = "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000";
+		}else{
+			a.type = "application/x-shockwave-flash";
+		}
+		
+		//build the object tag
+		var tag = "<object ";
+		
+		//attributes
+		for(var i in a){
+			if (a.hasOwnProperty(i)) tag += " " + i + "='"+a[i]+"'";
+		}
+		
+		tag += ">"
+		
+		//params
 		for(var i in p){
 			if (p.hasOwnProperty(i)) tag += "<param name='"+i+"' value='"+p[i]+"'>";
 		}
 		
-		tag += "<embed src='"+this.swfPath+"' width='100%' height='100%' align='top' hspace='0' vspace='0' type='application/x-shockwave-flash' name='"+this.swfID+"' ";
-		
-		for(var i in p){
-			if (p.hasOwnProperty(i)) tag += i+"='"+p[i]+"' ";
-		}
-		
-		tag += "></embed></object>";
+		tag += "</object>";
 		
 		//output
 		var minValues = (this.scrollbarWidth > 0 && this.scrollbarHeight > 0) ? "min-width:"+this.scrollbarWidth + "px; min-height:"+this.scrollbarHeight+"px" : "" ;
