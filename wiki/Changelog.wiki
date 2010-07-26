@@ -4,6 +4,14 @@
 == swfIN changelog ==
 
 
+=== 2.4.0 `(2010-07-26)` === 
+ 
+ _FIXES_
+  * There's no more nested object/embed tags now, we're only using the object tag. This clears up reference ambiguity and also fixes a Chrome problem related to the `.callback()` method.
+
+  
+
+  
 === 2.3.1 `(2009-02-05)` === 
  
  _CHANGES_
